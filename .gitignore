@@ -1,0 +1,22 @@
+## Build outputs
+[Bb]in/
+[Oo]bj/
+
+## Databases
+*.db
+*.db-shm
+*.db-wal
+
+## Dynamic Uploads
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+wwwroot/uploads/temp/
+
+## IDE and OS files
+.vs/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+ehthumbs.db
+Desktop.ini
