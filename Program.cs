@@ -29,9 +29,7 @@ using (var scope = app.Services.CreateScope())
     if (!await context.ChatRooms.AnyAsync())
     {
         await context.ChatRooms.AddRangeAsync(
-            new lab3_PRN.Models.ChatRoom { Id = "general", Name = "Kênh Chung (General)", Avatar = "💬" },
-            new lab3_PRN.Models.ChatRoom { Id = "design", Name = "Nhóm Thiết Kế UI/UX", Avatar = "🎨" },
-            new lab3_PRN.Models.ChatRoom { Id = "dev", Name = "Kênh Lập Trình Viên", Avatar = "💻" }
+            new lab3_PRN.Models.ChatRoom { Id = "general", Name = "Kênh Chung (General)", Avatar = "💬" }
         );
         await context.SaveChangesAsync();
     }

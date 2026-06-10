@@ -251,9 +251,6 @@ function handleTypingState() {
 function loadRoomMessages(roomId) {
     chatMessages.innerHTML = `
         <div class="chat-feed-loader" style="animation: none;">
-            <p style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">
-                
-            </p>
         </div>
     `;
 
