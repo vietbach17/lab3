@@ -7,6 +7,7 @@ let selectedFile = null;
 let uploadAbortController = null;
 let isTyping = false;
 let typingTimeout = null;
+let sessionMessages = [];
 
 // DOM Elements
 const chatMessages = document.getElementById("chatMessages");
@@ -124,6 +125,10 @@ function setupSignalR() {
     connection.on("ReceiveMessage", (msg) => {
         appendMessageToUI(msg);
         updateRoomLastMessage(msg);
+        if (msg.fileUrl) {
+            sessionMessages.push(msg);
+            updateSharedFilesDrawer(sessionMessages);
+        }
     });
 
     // Event: Typing indicator update
@@ -244,36 +249,23 @@ function handleTypingState() {
 // UI RENDERING & MESSAGE HISTORY
 // -------------------------------------------------------------
 function loadRoomMessages(roomId) {
-    // Show Loading
     chatMessages.innerHTML = `
-        <div class="chat-feed-loader">
-            <div class="spinner"></div>
-            <p>Đang tải lịch sử trò chuyện...</p>
+        <div class="chat-feed-loader" style="animation: none;">
+            <p style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">
+                
+            </p>
         </div>
     `;
 
-    // Update Header Active State
     const activeRoomElement = document.querySelector(`.room-item[data-room-id="${roomId}"]`);
     if (activeRoomElement) {
         activeRoomName.innerText = activeRoomElement.querySelector(".room-name").innerText;
         activeRoomAvatar.innerText = activeRoomElement.querySelector(".room-avatar").innerText;
     }
 
-    // Fetch messages from Razor Page API endpoint
-    fetch(`?handler=Messages&roomId=${roomId}`)
-        .then(res => res.json())
-        .then(messages => {
-            chatMessages.innerHTML = "";
-            messages.forEach(msg => {
-                appendMessageToUI(msg);
-            });
-            scrollToBottom();
-            updateSharedFilesDrawer(messages);
-        })
-        .catch(err => {
-            console.error("Failed to load historical messages", err);
-            chatMessages.innerHTML = `<div class="chat-feed-loader"><p style="color:red;">Không thể đồng bộ tin nhắn cũ. Vui lòng thử lại.</p></div>`;
-        });
+    scrollToBottom();
+    sessionMessages = [];
+    updateSharedFilesDrawer([]);
 }
 
 function appendMessageToUI(msg) {

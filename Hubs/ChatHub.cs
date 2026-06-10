@@ -1,18 +1,14 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
-using lab3_PRN.Data;
 using lab3_PRN.Models;
 
 namespace lab3_PRN.Hubs;
 
 public class ChatHub : Hub
 {
-    private readonly ChatDbContext _context;
-
-    public ChatHub(ChatDbContext context)
+    public ChatHub()
     {
-        _context = context;
     }
 
     public async Task JoinRoom(string roomId)
@@ -26,6 +22,7 @@ public class ChatHub : Hub
     {
         var message = new Message
         {
+            Id = Random.Shared.Next(1, 10000000),
             ChatRoomId = roomId,
             Sender = sender,
             Content = content,
@@ -35,9 +32,6 @@ public class ChatHub : Hub
             FileType = fileType,
             FileSize = fileSize
         };
-
-        _context.Messages.Add(message);
-        await _context.SaveChangesAsync();
 
         await Clients.Group(roomId).SendAsync("ReceiveMessage", new
         {

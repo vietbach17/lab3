@@ -17,5 +17,4 @@ public class ChatRoom
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public ICollection<Message> Messages { get; set; } = new List<Message>();
 }

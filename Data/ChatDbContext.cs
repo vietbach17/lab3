@@ -10,16 +10,4 @@ public class ChatDbContext : DbContext
     }
 
     public DbSet<ChatRoom> ChatRooms => Set<ChatRoom>();
-    public DbSet<Message> Messages => Set<Message>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<Message>()
-            .HasOne(m => m.ChatRoom)
-            .WithMany(r => r.Messages)
-            .HasForeignKey(m => m.ChatRoomId)
-            .OnDelete(DeleteBehavior.Cascade);
-    }
 }

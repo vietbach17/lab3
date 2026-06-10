@@ -20,7 +20,6 @@ public class IndexModel : PageModel
     private readonly IWebHostEnvironment _environment;
 
     public List<ChatRoom> ChatRooms { get; set; } = new();
-    public List<Message> Messages { get; set; } = new();
     public string ActiveRoomId { get; set; } = "general";
 
     public IndexModel(ILogger<IndexModel> logger, ChatDbContext context, IWebHostEnvironment environment)
@@ -38,32 +37,6 @@ public class IndexModel : PageModel
         }
 
         ChatRooms = await _context.ChatRooms.ToListAsync();
-        
-        Messages = await _context.Messages
-            .Where(m => m.ChatRoomId == ActiveRoomId)
-            .OrderBy(m => m.Timestamp)
-            .ToListAsync();
-    }
-
-    public async Task<IActionResult> OnGetMessagesAsync(string roomId)
-    {
-        var messages = await _context.Messages
-            .Where(m => m.ChatRoomId == roomId)
-            .OrderBy(m => m.Timestamp)
-            .Select(m => new
-            {
-                id = m.Id,
-                sender = m.Sender,
-                content = m.Content,
-                timestamp = m.Timestamp.ToString("o"),
-                fileUrl = m.FileUrl,
-                fileName = m.FileName,
-                fileType = m.FileType,
-                fileSize = m.FileSize
-            })
-            .ToListAsync();
-
-        return new JsonResult(messages);
     }
 
     public async Task<IActionResult> OnPostUploadChunkAsync(
