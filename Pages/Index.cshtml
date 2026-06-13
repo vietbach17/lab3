@@ -66,6 +66,14 @@
                     </p>
                 </div>
             </div>
+            
+            <!-- Server IP input for LAN connection -->
+            <div class="server-ip-config" style="display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 16px;">
+                <label for="serverIpInput" style="font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">IP Máy Chủ:</label>
+                <input type="text" id="serverIpInput" placeholder="IP:Port (e.g. 192.168.1.15:5000)" style="border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; font-size: 12px; outline: none; width: 190px; background-color: var(--sidebar-bg); color: var(--text-primary);" />
+                <button id="connectServerBtn" style="background-color: var(--zalo-blue); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; font-weight: 500; transition: background-color 0.2s;">Kết nối</button>
+            </div>
+
             <div class="chat-header-actions">
                 <button class="action-btn" title="Tìm tin nhắn">
                     <svg viewBox="0 0 24 24" class="svg-icon"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>

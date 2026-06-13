@@ -1,8 +1,21 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using lab3_PRN.Data;
 using lab3_PRN.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.SetIsOriginAllowed(origin => true)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -35,6 +48,33 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Print Server IP addresses on startup
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    try
+    {
+        var hostName = System.Net.Dns.GetHostName();
+        var ipEntry = System.Net.Dns.GetHostEntry(hostName);
+        
+        Console.WriteLine("\n=======================================================");
+        Console.WriteLine("ĐỊA CHỈ IP LAN MÁY CHỦ CỦA BẠN:");
+        Console.WriteLine("Các thành viên khác có thể kết nối tới máy bạn bằng IP:");
+        
+        foreach (var ip in ipEntry.AddressList)
+        {
+            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            {
+                Console.WriteLine($" -> http://{ip}:5000 (Chạy lệnh: dotnet run --urls \"http://0.0.0.0:5000\")");
+            }
+        }
+        Console.WriteLine("=======================================================\n");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Không thể xác định địa chỉ IP máy chủ: {ex.Message}");
+    }
+});
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -46,6 +86,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Apply CORS policy
+app.UseCors();
 
 app.UseAuthorization();
 

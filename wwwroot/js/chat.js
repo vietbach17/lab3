@@ -8,6 +8,7 @@ let uploadAbortController = null;
 let isTyping = false;
 let typingTimeout = null;
 let sessionMessages = [];
+let serverBaseUrl = window.location.origin; // Tracks current connected server
 
 // DOM Elements
 const chatMessages = document.getElementById("chatMessages");
@@ -70,6 +71,12 @@ document.addEventListener("DOMContentLoaded", () => {
         currentRoomId = urlRoomId;
     }
 
+    // Set initial IP input value
+    const ipInput = document.getElementById("serverIpInput");
+    if (ipInput) {
+        ipInput.value = window.location.host;
+    }
+
     setupSignalR();
     setupEventListeners();
     loadEmojiPicker();
@@ -94,8 +101,13 @@ function setupTheme() {
 // SIGNALR FLOW & LOGIC (Assigned to Member 2)
 // -------------------------------------------------------------
 function setupSignalR() {
+    // If a connection already exists, make sure to stop it
+    if (connection) {
+        connection.stop();
+    }
+
     connection = new signalR.HubConnectionBuilder()
-        .withUrl("/chatHub")
+        .withUrl(serverBaseUrl + "/chatHub")
         .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // Custom intervals
         .build();
 
@@ -227,6 +239,36 @@ function setupEventListeners() {
             lightboxModal.classList.add("hidden");
         }
     });
+
+    // Connect to external server IP button
+    const connectServerBtn = document.getElementById("connectServerBtn");
+    const serverIpInput = document.getElementById("serverIpInput");
+    if (connectServerBtn && serverIpInput) {
+        connectServerBtn.addEventListener("click", () => {
+            const enteredVal = serverIpInput.value.trim();
+            if (enteredVal === "") {
+                alert("Vui lòng nhập địa chỉ IP:Port hợp lệ!");
+                return;
+            }
+
+            let newUrl = enteredVal;
+            if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
+                newUrl = "http://" + newUrl;
+            }
+
+            serverBaseUrl = newUrl;
+            
+            chatMessages.innerHTML = `
+                <div class="chat-feed-loader" style="animation: none;">
+                    <p style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">
+                        Đang kết nối tới máy chủ: ${serverBaseUrl}...
+                    </p>
+                </div>
+            `;
+
+            setupSignalR();
+        });
+    }
 }
 
 // Send Typing Event to SignalR (Throttled)
@@ -286,12 +328,17 @@ function appendMessageToUI(msg) {
     if (msg.fileUrl) {
         // Render File Attachment
         if (msg.fileType === "image") {
+            let fullFileUrl = msg.fileUrl;
+            if (fullFileUrl.startsWith("/")) {
+                fullFileUrl = serverBaseUrl + fullFileUrl;
+            }
+
             const imgLink = document.createElement("a");
             imgLink.className = "msg-image-attachment";
-            imgLink.onclick = () => showLightbox(msg.fileUrl, msg.fileName);
+            imgLink.onclick = () => showLightbox(fullFileUrl, msg.fileName);
             
             const img = document.createElement("img");
-            img.src = msg.fileUrl;
+            img.src = fullFileUrl;
             img.alt = msg.fileName;
             
             imgLink.appendChild(img);
@@ -501,7 +548,7 @@ function uploadFileInChunks(file) {
 
             try {
                 // Upload chunk to Razor Page Handler
-                const response = await fetch("?handler=UploadChunk", {
+                const response = await fetch(serverBaseUrl + "/Index?handler=UploadChunk", {
                     method: "POST",
                     body: formData,
                     signal: uploadAbortController.signal
@@ -570,7 +617,7 @@ async function downloadFileWithProgress(fileName, fileSize, msgId) {
     if (downloadFill) downloadFill.style.width = "0%";
 
     try {
-        const response = await fetch(`?handler=DownloadFile&fileName=${encodeURIComponent(fileName)}`);
+        const response = await fetch(serverBaseUrl + `/Index?handler=DownloadFile&fileName=${encodeURIComponent(fileName)}`);
         
         if (!response.ok) {
             throw new Error(`File download failed: ${response.statusText}`);
@@ -645,10 +692,14 @@ function updateSharedFilesDrawer(messages) {
     
     files.forEach(f => {
         if (f.fileType === "image") {
+            let fullFileUrl = f.fileUrl;
+            if (f.fileUrl.startsWith("/")) {
+                fullFileUrl = serverBaseUrl + f.fileUrl;
+            }
             const div = document.createElement("div");
             div.className = "shared-image-item";
-            div.onclick = () => showLightbox(f.fileUrl, f.fileName);
-            div.innerHTML = `<img src="${f.fileUrl}" alt="${f.fileName}" />`;
+            div.onclick = () => showLightbox(fullFileUrl, f.fileName);
+            div.innerHTML = `<img src="${fullFileUrl}" alt="${f.fileName}" />`;
             sharedImagesGrid.appendChild(div);
         } else {
             const row = document.createElement("a");
