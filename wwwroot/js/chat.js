@@ -106,27 +106,32 @@ function setupSignalR() {
         connection.stop();
     }
 
-    connection = new signalR.HubConnectionBuilder()
+    const newConnection = new signalR.HubConnectionBuilder()
         .withUrl(serverBaseUrl + "/chatHub")
         .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // Custom intervals
         .build();
 
+    connection = newConnection;
+
     // Event: Connection state changes
-    connection.onreconnecting(() => {
+    newConnection.onreconnecting(() => {
+        if (connection !== newConnection) return;
         statusDot.className = "status-dot disconnected";
         statusText.innerText = "Đang kết nối lại...";
         connectionBanner.classList.remove("hidden");
     });
 
-    connection.onreconnected(() => {
+    newConnection.onreconnected(() => {
+        if (connection !== newConnection) return;
         statusDot.className = "status-dot connected";
         statusText.innerText = "Trực tuyến";
         connectionBanner.classList.add("hidden");
         // Re-join current chat room on reconnect
-        connection.invoke("JoinRoom", currentRoomId).catch(console.error);
+        newConnection.invoke("JoinRoom", currentRoomId).catch(console.error);
     });
 
-    connection.onclose(() => {
+    newConnection.onclose(() => {
+        if (connection !== newConnection) return;
         statusDot.className = "status-dot disconnected";
         statusText.innerText = "Mất kết nối";
         connectionBanner.classList.remove("hidden");
@@ -134,7 +139,8 @@ function setupSignalR() {
     });
 
     // Event: Receive message in room
-    connection.on("ReceiveMessage", (msg) => {
+    newConnection.on("ReceiveMessage", (msg) => {
+        if (connection !== newConnection) return;
         appendMessageToUI(msg);
         updateRoomLastMessage(msg);
         if (msg.fileUrl) {
@@ -144,7 +150,8 @@ function setupSignalR() {
     });
 
     // Event: Typing indicator update
-    connection.on("ReceiveTyping", (sender, typingState) => {
+    newConnection.on("ReceiveTyping", (sender, typingState) => {
+        if (connection !== newConnection) return;
         if (typingState) {
             typingUser.innerText = sender;
             typingIndicator.classList.remove("hidden");
@@ -154,16 +161,20 @@ function setupSignalR() {
     });
 
     // Start connection
-    connection.start()
+    newConnection.start()
         .then(() => {
+            if (connection !== newConnection) return;
             statusDot.className = "status-dot connected";
             statusText.innerText = "Trực tuyến";
+            connectionBanner.classList.add("hidden"); // Ensure banner is hidden on success
+            
             // Join active room
-            connection.invoke("JoinRoom", currentRoomId)
+            newConnection.invoke("JoinRoom", currentRoomId)
                 .then(() => console.log(`Joined room group: ${currentRoomId}`))
                 .catch(console.error);
         })
         .catch(err => {
+            if (connection !== newConnection) return;
             console.error("SignalR Connection Error: ", err);
             statusDot.className = "status-dot disconnected";
             statusText.innerText = "Lỗi kết nối";
@@ -204,6 +215,20 @@ function setupEventListeners() {
             emojiPicker.classList.add("hidden");
         }
     });
+
+    // Attach Image selection
+    const photoBtn = document.getElementById("photoBtn");
+    const imageInput = document.getElementById("imageInput");
+    if (photoBtn && imageInput) {
+        photoBtn.addEventListener("click", () => {
+            imageInput.click();
+        });
+        imageInput.addEventListener("change", (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+    }
 
     // Attach File selection
     attachBtn.addEventListener("click", () => {
@@ -420,7 +445,6 @@ function loadEmojiPicker() {
         span.addEventListener("click", () => {
             messageInput.value += emoji;
             messageInput.focus();
-            emojiPicker.classList.add("hidden");
             handleTypingState(); // Trigger typing status update
         });
         emojiGrid.appendChild(span);
@@ -464,6 +488,10 @@ function handleFileSelection(file) {
 function clearFileSelection() {
     selectedFile = null;
     fileInput.value = "";
+    const imageInput = document.getElementById("imageInput");
+    if (imageInput) {
+        imageInput.value = "";
+    }
     attachmentPreviewPane.classList.add("hidden");
 }
 
