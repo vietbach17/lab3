@@ -251,12 +251,12 @@ function setupEventListeners() {
                 return;
             }
 
-            let newUrl = enteredVal;
-            if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
-                newUrl = "http://" + newUrl;
+            let tempHost = enteredVal.replace("http://", "").replace("https://", "");
+            if (!tempHost.includes(":")) {
+                tempHost = tempHost + ":5000";
             }
 
-            serverBaseUrl = newUrl;
+            serverBaseUrl = "http://" + tempHost;
             
             chatMessages.innerHTML = `
                 <div class="chat-feed-loader" style="animation: none;">

@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using lab3_PRN.Data;
 using lab3_PRN.Models;
 
 namespace lab3_PRN.Pages;
@@ -16,27 +14,28 @@ namespace lab3_PRN.Pages;
 public class IndexModel : PageModel
 {
     private readonly ILogger<IndexModel> _logger;
-    private readonly ChatDbContext _context;
     private readonly IWebHostEnvironment _environment;
 
     public List<ChatRoom> ChatRooms { get; set; } = new();
     public string ActiveRoomId { get; set; } = "general";
 
-    public IndexModel(ILogger<IndexModel> logger, ChatDbContext context, IWebHostEnvironment environment)
+    public IndexModel(ILogger<IndexModel> logger, IWebHostEnvironment environment)
     {
         _logger = logger;
-        _context = context;
         _environment = environment;
     }
 
-    public async Task OnGetAsync(string? roomId)
+    public void OnGet(string? roomId)
     {
         if (!string.IsNullOrEmpty(roomId))
         {
             ActiveRoomId = roomId;
         }
 
-        ChatRooms = await _context.ChatRooms.ToListAsync();
+        ChatRooms = new List<ChatRoom>
+        {
+            new ChatRoom { Id = "general", Name = "Kênh Chung (General)", Avatar = "💬" }
+        };
     }
 
     public async Task<IActionResult> OnPostUploadChunkAsync(

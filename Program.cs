@@ -1,7 +1,7 @@
 using System;
-using Microsoft.EntityFrameworkCore;
-using lab3_PRN.Data;
 using lab3_PRN.Hubs;
+
+Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,27 +26,7 @@ builder.Services.AddSignalR(options =>
     options.EnableDetailedErrors = true;
 });
 
-// Configure SQLite DB
-builder.Services.AddDbContext<ChatDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 var app = builder.Build();
-
-// Seed database
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
-    context.Database.EnsureCreated();
-    
-    // Seed default chat channels
-    if (!await context.ChatRooms.AnyAsync())
-    {
-        await context.ChatRooms.AddRangeAsync(
-            new lab3_PRN.Models.ChatRoom { Id = "general", Name = "Kênh Chung (General)", Avatar = "💬" }
-        );
-        await context.SaveChangesAsync();
-    }
-}
 
 // Print Server IP addresses on startup
 app.Lifetime.ApplicationStarted.Register(() =>
@@ -64,7 +44,7 @@ app.Lifetime.ApplicationStarted.Register(() =>
         {
             if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
             {
-                Console.WriteLine($" -> http://{ip}:5000 (Chạy lệnh: dotnet run --urls \"http://0.0.0.0:5000\")");
+                Console.WriteLine($" -> http://{ip}:5000");
             }
         }
         Console.WriteLine("=======================================================\n");
